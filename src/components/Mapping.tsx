@@ -1,18 +1,18 @@
 import { Button, Grid, MenuItem, Select } from "@material-ui/core";
 import { Loader } from "google-maps";
-import { FormEvent, useCallback, useRef } from "react";
+import { FormEvent, useCallback, useRef, FunctionComponent } from "react";
 import { useEffect, useState } from "react";
+import { colors } from "../util/colors";
 import { getCurrentPosition } from "../util/geolocation";
 import { makeCarIcon, makeMarkerIcon, Map } from "../util/map";
 import { Route } from '../util/models'
+import { sample, shuffle} from 'lodash'
 
 const API_URL = process.env.REACT_APP_API_URL;
 
 const googleMapsLoader = new Loader(process.env.REACT_APP_GOOGLE_API_KEY)
 
-
-type Props = { };
-export const Mapping = (props: Props) => {
+export const Mapping: FunctionComponent = ( ) => {
     const [routes, setRoutes] = useState<Route[]>([])
     const [routeIdSelected, setRouteIdSelected] = useState<string>('')
     const mapRef = useRef<Map>()
@@ -40,15 +40,16 @@ export const Mapping = (props: Props) => {
     const startRoute = useCallback((event: FormEvent) => {
         event.preventDefault();
         const route = routes.find((route) => route._id === routeIdSelected)
+        const color = sample(shuffle(colors)) as string
 
         mapRef.current?.addRoute(routeIdSelected, {
             currentMarkerOptions: {
                 position: route?.startPosition,
-                icon: makeCarIcon('#000'),
+                icon: makeCarIcon(color),
             },
             endMarkerOptions: {
                 position: route?.endPosition,
-                icon: makeMarkerIcon('#000'),
+                icon: makeMarkerIcon(color),
             }
         })
     }, [routeIdSelected, routes]);
