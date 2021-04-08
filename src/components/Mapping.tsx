@@ -1,4 +1,4 @@
-import { Button, Grid, MenuItem, Select } from "@material-ui/core";
+import { Button, Grid, makeStyles, MenuItem, Select } from "@material-ui/core";
 import { Loader } from "google-maps";
 import { FormEvent, useCallback, useRef, FunctionComponent } from "react";
 import { useEffect, useState } from "react";
@@ -14,7 +14,26 @@ const API_URL = process.env.REACT_APP_API_URL;
 
 const googleMapsLoader = new Loader(process.env.REACT_APP_GOOGLE_API_KEY)
 
+const useStyles = makeStyles({
+    root: {
+      width: "100%",
+      height: "100%",
+    },
+    form: {
+      margin: "16px",
+    },
+    btnSubmitWrapper: {
+      textAlign: "center",
+      marginTop: "8px",
+    },
+    map: {
+      width: "100%",
+      height: "100%",
+    },
+  });
+
 export const Mapping: FunctionComponent = ( ) => {
+    const classes = useStyles()
     const [routes, setRoutes] = useState<Route[]>([])
     const [routeIdSelected, setRouteIdSelected] = useState<string>('')
     const mapRef = useRef<Map>()
@@ -70,9 +89,9 @@ export const Mapping: FunctionComponent = ( ) => {
       );
 
     return (
-        <Grid container style={{width: '100%', height: '100%'}}>
+        <Grid container className={classes.root}>
             <Grid item xs={12} sm={3}>
-                <form onSubmit={startRoute}>
+                <form onSubmit={startRoute} className={classes.form}>
                     <Select fullWidth displayEmpty value={routeIdSelected} onChange={(event) => setRouteIdSelected(event.target.value + "")}>
                         <MenuItem value="">
                             <em>Choose a delivery</em>
@@ -84,11 +103,13 @@ export const Mapping: FunctionComponent = ( ) => {
                         )}
 
                     </Select>
-                    <Button type="submit" color="primary" variant="contained">Start a delivery</Button>
+                    <div className={classes.btnSubmitWrapper}>
+                        <Button type="submit" color="primary" variant="contained">Start a delivery</Button>
+                    </div>
                 </form>
             </Grid>
             <Grid item xs={12} sm={9}>
-                <div id="map" style={{width: '100%', height: '100%'}}></div>
+                <div id="map" className={classes.map}></div>
             </Grid>
         </Grid>
     );
