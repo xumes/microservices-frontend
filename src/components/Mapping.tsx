@@ -42,9 +42,46 @@ export const Mapping: FunctionComponent = ( ) => {
     const socketIORef = useRef<SocketIOClient.Socket>()
     const { enqueueSnackbar} = useSnackbar()
 
+    const finishRoute = useCallback(
+      (route: Route) => {
+        enqueueSnackbar(`${route.title} has delivered!`, {
+          variant: "success",
+        });
+        mapRef.current?.removeRoute(route._id);
+      },
+      [enqueueSnackbar]
+    );
+
+    useEffect(() => {
+      if (!socketIORef.current?.connected) {
+        socketIORef.current = io.connect(API_URL);
+        socketIORef.current.on("connect", () => console.log("socket has been reconnected!!!"));
+      }
+
+      const handler = (data: {
+        routeId: string;
+        position: [number, number];
+        finished: boolean;
+      }) => {
+        console.log(data);
+        mapRef.current?.moveCurrentMarker(data.routeId, {
+          lat: data.position[0],
+          lng: data.position[1],
+        });
+        const route = routes.find((route) => route._id === data.routeId) as Route;
+        if (data.finished) {
+          finishRoute(route);
+        }
+      };
+      socketIORef.current?.on("new-position", handler);
+      return () => {
+        socketIORef.current?.off("new-position", handler);
+      };
+    }, [finishRoute, routes, routeIdSelected]);
+
     useEffect(() => {
       socketIORef.current = io.connect(`${API_URL}`)
-      socketIORef.current.on('connect', () => console.log('conectou no socket'))
+      socketIORef.current.on('connect', () => console.log('socket is connected'))
     }, [])
 
     useEffect(() => {
@@ -88,7 +125,7 @@ export const Mapping: FunctionComponent = ( ) => {
             })
           } catch (error) {
             if (error instanceof RouteExistsError) {
-              enqueueSnackbar(`${route?.title} já adicionado, espere finalizar.`, {
+              enqueueSnackbar(`${route?.title} has already been started. Wait for delivery.`, {
                 variant: "error",
               });
               return;
